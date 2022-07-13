@@ -15,4 +15,4 @@ https://user-images.githubusercontent.com/70626264/178789999-f2f9fa6d-6417-48c4-
 
 ## 🥱 Direct Link
 ### App Link
-[![Download](https://freeiconshop.com/wp-content/uploads/edd/download-flat.png)](https://github.com/ifenil/CryptoAddressChecker/raw/master/app/app-release.apk)
+[![Download](https://freeiconshop.com/wp-content/uploads/edd/download-flat.png)](https://github.com/ifenil/CryptoAddressChecker/blob/master/app/release/app-release.apk)
