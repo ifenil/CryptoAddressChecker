@@ -1,5 +1,10 @@
 package com.crypto.cryptoaddresschecker
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -24,6 +29,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.WriterException
+import com.google.zxing.qrcode.QRCodeWriter
+
 
 @Composable
 fun NavController.ScannerScreen(
@@ -36,6 +45,7 @@ fun NavController.ScannerScreen(
     val cameraProviderFeature = remember { ProcessCameraProvider.getInstance(context) }
     val resultText = remember { mutableStateOf("") }
     val isValid = remember { mutableStateOf("") }
+    val canShare = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -98,29 +108,9 @@ fun NavController.ScannerScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.DarkGray)
                     .clickable {
-                        if (scannedCoin == "BTC" &&
-                            scannedCoin.length <= 34 &&
-                            scannedCoin.length >= 25 &&
-                            scannedCoin[0] == '1' &&
-                            !scannedCoin.contentEquals("0") &&
-                            !scannedCoin.contentEquals("O") &&
-                            !scannedCoin.contentEquals("l") &&
-                            !scannedCoin.contentEquals("I")
-                        ) {
-                            isValid.value = "this BTC address is valid"
-                        } else if (
-                            scannedCoin == "ETH" &&
-                            scannedCoin[0] == '0' &&
-                            scannedCoin[1] == 'x' &&
-                            scannedCoin.contains("[0-9]+") &&
-                            scannedCoin.contains("[a-f]+")
-                        ) {
-                            isValid.value = "this ETH address is valid"
-                        } else {
-                            isValid.value = "$code this address is not valid"
-                        }
+                        verifyAddress(code, scannedCoin, canShare, isValid)
                     }
-                    .padding(horizontal = 50.dp, vertical =10.dp)
+                    .padding(horizontal = 50.dp, vertical = 10.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -135,9 +125,13 @@ fun NavController.ScannerScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.DarkGray)
                     .clickable {
-
+                        verifyAddress(code, scannedCoin, canShare, isValid)
+                        val bitmap = encodeAsBitmap(code)
+                        if (bitmap != null && canShare.value) {
+                            sharePalette(bitmap, context)
+                        }
                     }
-                    .padding(horizontal = 50.dp, vertical =10.dp)
+                    .padding(horizontal = 50.dp, vertical = 10.dp)
             )
         }
 
@@ -148,13 +142,76 @@ fun NavController.ScannerScreen(
                 text = isValid.value,
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center,
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 10.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color.DarkGray)
-                    .padding(horizontal = 50.dp, vertical =10.dp)
+                    .background(Color.LightGray)
+                    .padding(horizontal = 50.dp, vertical = 10.dp)
             )
         }
     }
+}
+
+private fun verifyAddress(
+    code: String,
+    scannedCoin: String,
+    canShare: MutableState<Boolean>,
+    isValid: MutableState<String>
+){
+    if (scannedCoin == "BTC" &&
+        code.length <= 34 &&
+        code.length >= 25 &&
+        code[0] == '1' &&
+        !code.contentEquals("0") &&
+        !code.contentEquals("O") &&
+        !code.contentEquals("l") &&
+        !code.contentEquals("I")
+    ) {
+        canShare.value = true
+        isValid.value = "✔️\nBTC address is valid"
+    } else if (
+        scannedCoin == "ETH" &&
+        code[0] == '0' &&
+        code[1] == 'x' &&
+        code.contains(Regex("[0-9]+")) &&
+        code.contains(Regex("[a-f]"))
+    ) {
+        canShare.value = true
+        isValid.value = "✔️\nETH address is valid"
+    } else {
+        isValid.value = "❌ \ncrypto address is not valid"
+    }
+}
+
+@Throws(WriterException::class)
+private fun encodeAsBitmap(str: String?): Bitmap? {
+    val writer = QRCodeWriter()
+    val bitMatrix = writer.encode(str, BarcodeFormat.QR_CODE, 250, 250)
+    val w = bitMatrix.width
+    val h = bitMatrix.height
+    val pixels = IntArray(w * h)
+    for (y in 0 until h) {
+        for (x in 0 until w) {
+            pixels[y * w + x] = if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        }
+    }
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
+    return bitmap
+}
+
+
+private fun sharePalette(bitmap: Bitmap, context: Context) {
+    val bitmapPath = MediaStore.Images.Media.insertImage(
+        context.contentResolver,
+        bitmap,
+        "Juno",
+        "QR Code"
+    )
+    val bitmapUri: Uri = Uri.parse(bitmapPath)
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.type = "image/png"
+    intent.putExtra(Intent.EXTRA_STREAM, bitmapUri)
+    context.startActivity(Intent.createChooser(intent, "QR Code"))
 }
