@@ -3,7 +3,6 @@ package com.crypto.cryptoaddresschecker
 import android.Manifest.permission.CAMERA
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
@@ -63,12 +62,6 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Permission Denined \n You cannot use app without providing permission", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private fun restartApp() {
-        val intent = Intent(this, MainActivity::class.java)
-        this.startActivity(intent)
-        ActivityCompat.finishAffinity(this)
     }
 }
 

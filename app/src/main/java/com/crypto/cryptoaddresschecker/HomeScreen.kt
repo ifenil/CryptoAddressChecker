@@ -1,5 +1,6 @@
 package com.crypto.cryptoaddresschecker
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,8 +39,13 @@ fun NavController.HomeUI(){
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color.DarkGray)
                 .clickable {
-                    scanCoin.value = "BTC"
-                    navigate("Scanner/${scanCoin.value}")
+                    if (checkPermissions(context)) {
+                        Toast.makeText(context, "Permission Granted..", Toast.LENGTH_SHORT).show()
+                        scanCoin.value = "BTC"
+                        navigate("Scanner/${scanCoin.value}")
+                    } else {
+                        requestPermission(context)
+                    }
                 }
                 .padding(horizontal = 50.dp, vertical = 10.dp)
         )
@@ -56,8 +62,13 @@ fun NavController.HomeUI(){
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color.DarkGray)
                 .clickable {
-                    scanCoin.value = "ETH"
-                    navigate("Scanner/${scanCoin.value}")
+                    if (checkPermissions(context)) {
+                        Toast.makeText(context, "Permission Granted..", Toast.LENGTH_SHORT).show()
+                        scanCoin.value = "ETH"
+                        navigate("Scanner/${scanCoin.value}")
+                    } else {
+                        requestPermission(context)
+                    }
                 }
                 .padding(horizontal = 50.dp, vertical = 10.dp)
         )
