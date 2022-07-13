@@ -159,6 +159,8 @@ private fun verifyAddress(
     canShare: MutableState<Boolean>,
     isValid: MutableState<String>
 ){
+    val ethADD = code.subSequence(2, code.length)
+
     if (scannedCoin == "BTC" &&
         code.length <= 34 &&
         code.length >= 25 &&
@@ -174,8 +176,8 @@ private fun verifyAddress(
         scannedCoin == "ETH" &&
         code[0] == '0' &&
         code[1] == 'x' &&
-        code.contains(Regex("[0-9]+")) &&
-        code.contains(Regex("[a-f]"))
+        ethADD.contains(Regex("[0-9]+")) &&
+        !ethADD.contains(Regex("[g-zA-Z]+"))
     ) {
         canShare.value = true
         isValid.value = "✔️\nETH address is valid"
